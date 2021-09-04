@@ -11,12 +11,12 @@ func DefaultFindFromRequest(r *http.Request, db *gorm.DB, data interface{}) erro
 	if err != nil {
 		return err
 	}
-	if err := db.Set("gorm:auto_preload", true).First(data, id).Error; err != nil {
+	if err := db.Set("gorm:auto_preload", true).WithContext(r.Context()).First(data, id).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func DefaultQueryAll(r *http.Request, q *gorm.DB) *gorm.DB {
-	return q.Set("gorm:auto_preload", true)
+	return q.Set("gorm:auto_preload", true).WithContext(r.Context())
 }

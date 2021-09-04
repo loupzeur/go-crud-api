@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/loupzeur/go-crud-api/utils"
+	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 )
 
@@ -64,26 +65,26 @@ func CrudRoutesSpecificURL(models Validation,
 	delfunc func(r *http.Request, data interface{}) bool, delrights utils.RightBits, url string) utils.Routes {
 	parentName := strings.Split(url, "/")
 	return utils.Routes{
-		utils.Route{"GetAll" + parentName[0] + strings.Title(models.TableName()), "GET", "/api/" + url + models.TableName(),
-			func(w http.ResponseWriter, r *http.Request) {
+		utils.Route{Name: "GetAll" + parentName[0] + strings.Title(models.TableName()), Method: "GET", Pattern: "/api/" + url + models.TableName(),
+			HandlerFunc: func(w http.ResponseWriter, r *http.Request) {
 				GenericGetQueryAll(w, r, models, freq)
-			}, uint32(getallrights)},
-		utils.Route{"Get" + parentName[0] + strings.Title(models.TableName()), "GET", "/api/" + url + models.TableName() + "/{id:[0-9]+}",
-			func(w http.ResponseWriter, r *http.Request) {
+			}, Authorization: uint32(getallrights)},
+		utils.Route{Name: "Get" + parentName[0] + strings.Title(models.TableName()), Method: "GET", Pattern: "/api/" + url + models.TableName() + "/{id:[0-9]+}",
+			HandlerFunc: func(w http.ResponseWriter, r *http.Request) {
 				GenericGet(w, r, models, getfunc)
-			}, uint32(getrights)},
-		utils.Route{"Create" + parentName[0] + strings.Title(models.TableName()), "POST", "/api/" + url + models.TableName(),
-			func(w http.ResponseWriter, r *http.Request) {
+			}, Authorization: uint32(getrights)},
+		utils.Route{Name: "Create" + parentName[0] + strings.Title(models.TableName()), Method: "POST", Pattern: "/api/" + url + models.TableName(),
+			HandlerFunc: func(w http.ResponseWriter, r *http.Request) {
 				GenericCreate(w, r, models, crefunc)
-			}, uint32(crerights)},
-		utils.Route{"Update" + parentName[0] + strings.Title(models.TableName()), "PUT", "/api/" + url + models.TableName() + "/{id:[0-9]+}",
-			func(w http.ResponseWriter, r *http.Request) {
+			}, Authorization: uint32(crerights)},
+		utils.Route{Name: "Update" + parentName[0] + strings.Title(models.TableName()), Method: "PUT", Pattern: "/api/" + url + models.TableName() + "/{id:[0-9]+}",
+			HandlerFunc: func(w http.ResponseWriter, r *http.Request) {
 				GenericUpdate(w, r, models, updfunc)
-			}, uint32(updrights)},
-		utils.Route{"Delete" + parentName[0] + strings.Title(models.TableName()), "DELETE", "/api/" + url + models.TableName() + "/{id:[0-9]+}",
-			func(w http.ResponseWriter, r *http.Request) {
+			}, Authorization: uint32(updrights)},
+		utils.Route{Name: "Delete" + parentName[0] + strings.Title(models.TableName()), Method: "DELETE", Pattern: "/api/" + url + models.TableName() + "/{id:[0-9]+}",
+			HandlerFunc: func(w http.ResponseWriter, r *http.Request) {
 				GenericDelete(w, r, models, delfunc)
-			}, uint32(delrights)},
+			}, Authorization: uint32(delrights)},
 	}
 }
 
@@ -121,11 +122,14 @@ func GetAllFromDb(r *http.Request) (int, int, string) {
 func GenericGetQueryAll(w http.ResponseWriter, r *http.Request, data Validation, freq func(r *http.Request, req *gorm.DB) *gorm.DB) {
 	dtype := reflect.TypeOf(data)
 	pages := reflect.New(reflect.SliceOf(dtype)).Interface()
+	span, _ := opentracing.StartSpanFromContext(r.Context(), "GenericGetQueryAll") //opentracing.GlobalTracer().StartSpan("GenericGetQueryAll")
+	defer span.Finish()
 	//Limit and Pagination Part
+
 	offset, pagesize, order := GetAllFromDb(r)
 	err := error(nil)
 	if offset <= 0 && pagesize <= 0 {
-		err = errors.New("error with elements size")
+		span.LogKV("warn", "error with elements size, can't define offset or pagesize")
 	}
 	//Ordering Part
 	hasOrders := false //avoid sql injection on orders
@@ -160,12 +164,15 @@ func GenericGetQueryAll(w http.ResponseWriter, r *http.Request, data Validation,
 	count, resp, err := DefaultCountFunc(r, req)
 	if err != nil {
 		utils.Respond(w, utils.Message(false, "Error while retrieving data "))
+		span.LogKV("warn", "reference splut error"+err.Error())
 		log.Println("reference split error :", err.Error())
 		return
 	}
 
 	err = req.Offset(offset).Limit(pagesize).Find(pages).Error
 	if err != nil {
+
+		span.LogKV("warn", "error while retrieving date "+err.Error())
 		utils.Respond(w, utils.Message(false, "Error while retrieving data"))
 		return
 	}

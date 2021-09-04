@@ -8,7 +8,7 @@ import (
 
 //DefaultQueryAll default request for GetAll
 func DefaultQueryAll(r *http.Request, req *gorm.DB) *gorm.DB {
-	return req
+	return req.WithContext(r.Context())
 }
 
 //DefaultRightAccess return true right handler
