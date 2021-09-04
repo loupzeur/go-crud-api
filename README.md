@@ -3,7 +3,7 @@
 [![Report](https://goreportcard.com/badge/github.com/loupzeur/go-crud-api)](https://goreportcard.com/report/github.com/loupzeur/go-crud-api)
 [![Report](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![doc](https://camo.githubusercontent.com/d1a67a692a0fa15f86748f98a790a28b2086e50ee6cc85015010745183b26eed/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f676f2e6465762d7265666572656e63652d626c75653f6c6f676f3d676f266c6f676f436f6c6f723d7768697465)](https://pkg.go.dev/github.com/loupzeur/go-crud-api)
-
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Floupzeur%2Fgo-crud-api%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/loupzeur/go-crud-api/goto?ref=master)
 
 ## Overview
 
