@@ -23,3 +23,6 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Badge Coverage
+      run: go get github.com/jpoles1/gopherbadger && gopherbadger -md="README.md"
