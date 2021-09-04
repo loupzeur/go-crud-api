@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 //Validation interface to validate stuff

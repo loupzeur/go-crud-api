@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 //DefaultQueryAll default request for GetAll

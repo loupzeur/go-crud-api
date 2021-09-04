@@ -6,15 +6,16 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/loupzeur/go-crud-api/middlewares"
 	"github.com/loupzeur/go-crud-api/utils"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestGenRoute(t *testing.T) {
 	//have a DB
-	db, _ := gorm.Open("sqlite3", "gorm.db")
+	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 	SetDB(db)
 	//init the router
 	router := mux.NewRouter().StrictSlash(true)

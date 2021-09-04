@@ -3,7 +3,7 @@ package utils
 import (
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func DefaultFindFromRequest(r *http.Request, db *gorm.DB, data interface{}) error {

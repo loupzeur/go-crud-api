@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/loupzeur/go-crud-api/utils"
+	"gorm.io/gorm"
 )
 
 //Store db in use
@@ -103,7 +103,7 @@ func CrudRoutes(models Validation,
 }
 
 //GetAllFromDb return paginated database : offset, page size, order column
-func GetAllFromDb(r *http.Request) (int64, int64, string) {
+func GetAllFromDb(r *http.Request) (int, int, string) {
 	page, err := utils.ReadInt(r, "page", 1)
 	if err != nil || page < 1 {
 		return 0, 0, ""
@@ -114,7 +114,7 @@ func GetAllFromDb(r *http.Request) (int64, int64, string) {
 	}
 	offset := (page - 1) * pagesize
 	order := r.FormValue("order")
-	return offset, pagesize, order
+	return int(offset), int(pagesize), order
 }
 
 //GenericGetQueryAll return all elements with filters
@@ -177,9 +177,9 @@ func GenericGetQueryAll(w http.ResponseWriter, r *http.Request, data Validation,
 	utils.Respond(w, resp)
 }
 
-var DefaultCountFunc = func(r *http.Request, req *gorm.DB) (int, map[string]interface{}, error) {
+var DefaultCountFunc = func(r *http.Request, req *gorm.DB) (int64, map[string]interface{}, error) {
 	resp := utils.Message(true, "data returned")
-	count := 0
+	count := int64(0)
 	//here you can replace by some other count specific stuff (on group by, ...)
 	req.Count(&count)
 	return count, resp, nil
