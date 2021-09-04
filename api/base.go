@@ -225,7 +225,6 @@ func GenericGet(w http.ResponseWriter, r *http.Request, data Validation, f func(
 	tmp := reflect.New(reflect.TypeOf(data).Elem()).Interface().(Validation)
 	err := GetFromID(r, tmp)
 	if !f(r, tmp) {
-		err = errors.New("Access Forbidden")
 		utils.RespondCode(w, utils.Message(false, "Forbidden"), http.StatusForbidden)
 		return
 	}
@@ -283,7 +282,6 @@ func GenericCreate(w http.ResponseWriter, r *http.Request, data Validation, f ..
 
 //GenericUpdate default updater for controller
 func GenericUpdate(w http.ResponseWriter, r *http.Request, data Validation, f func(r *http.Request, data interface{}, data2 interface{}) bool) {
-	//tmp1 := reflect.Zero(reflect.SliceOf(reflect.TypeOf(data))).Interface().(Validation)
 	tmp1 := reflect.New(reflect.TypeOf(data).Elem()).Interface().(Validation)
 	tmp2 := reflect.New(reflect.TypeOf(data).Elem()).Interface()
 
@@ -295,7 +293,6 @@ func GenericUpdate(w http.ResponseWriter, r *http.Request, data Validation, f fu
 		return
 	}
 	if !f(r, tmp1, tmp2) {
-		err = errors.New("Access Forbidden")
 		utils.RespondCode(w, utils.Message(false, "Forbidden"), http.StatusForbidden)
 		return
 	}
@@ -324,7 +321,6 @@ func GenericDelete(w http.ResponseWriter, r *http.Request, data Validation, f fu
 	err := deleteFromID(r, tmp)
 	setUserEmitter(r, tmp)
 	if !f(r, tmp) {
-		err = errors.New("Access Forbidden")
 		utils.RespondCode(w, utils.Message(false, "Forbidden"), http.StatusForbidden)
 		return
 	}

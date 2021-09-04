@@ -10,4 +10,15 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 )
 
-require github.com/mattn/go-sqlite3 v1.14.0 // indirect
+require (
+	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/mattn/go-sqlite3 v1.14.0 // indirect
+	github.com/opentracing/basictracer-go v1.1.0 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rs/cors v1.8.0
+	github.com/uber/jaeger-client-go v2.29.1+incompatible // indirect
+	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
+	github.com/yurishkuro/opentracing-tutorial v0.0.0-20210818182759-66f6cf96eb47 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+)

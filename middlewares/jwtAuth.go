@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/loupzeur/go-crud-api/utils"
+	"github.com/opentracing/opentracing-go"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -24,6 +25,10 @@ func JwtAuthentication(next http.Handler) http.Handler {
 		curRouter := utils.Route{}
 		userRight := uint32(utils.NoRight) //default to no right to check for no auth routes
 		defer func() {                     //simple logging
+			auth, ctx := opentracing.StartSpanFromContext(r.Context(), "auth")
+			r = r.WithContext(ctx)
+			defer auth.Finish()
+			auth.LogKV("url", r.URL.String())
 			log.Println(r.URL.String(), r.UserAgent(), r.Header, w.Header(), curRoute.GetName())
 		}()
 		for _, value := range Routes {
