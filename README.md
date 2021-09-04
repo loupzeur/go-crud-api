@@ -5,7 +5,9 @@
 [![doc](https://camo.githubusercontent.com/d1a67a692a0fa15f86748f98a790a28b2086e50ee6cc85015010745183b26eed/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f676f2e6465762d7265666572656e63652d626c75653f6c6f676f3d676f266c6f676f436f6c6f723d7768697465)](https://pkg.go.dev/github.com/loupzeur/go-crud-api)
 
 
-check api/api_test.go for a simple exemple
+## Overview
+
+Provide the crud API of gorm object
 
 ## Support the validation interface 
 ```
