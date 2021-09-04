@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -29,38 +30,47 @@ https://github.com/jaegertracing/jaeger-client-go
 
 //basic HTTP server with jaeger debug
 func main() {
-	zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
-	cfg := config.Configuration{
-		ServiceName: "crud-go-api",
-		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &config.ReporterConfig{
-			LogSpans:            true,
-			BufferFlushInterval: 1 * time.Second,
-		},
-	}
-	tracer, closer, _ := cfg.NewTracer(
-		config.Logger(jaeger.StdLogger), config.ZipkinSharedRPCSpan(true),
-		config.Injector(opentracing.HTTPHeaders, zipkinPropagator),
-		config.Extractor(opentracing.HTTPHeaders, zipkinPropagator))
-	//tracer, closer := tracing.Init("crud-go-api")
+	closer := setTracing()
 	defer closer.Close()
-	opentracing.SetGlobalTracer(tracer)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
 	}
 
-	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
-	api.SetDB(db)
-	db.AutoMigrate(&TestObject{})
-	db.Use(gormopentracing.New())
+	setDB()
+	router := setRouter()
 
+	var handler http.Handler = router
+	//some example cors for a website on localhost:3000
+	if os.Getenv("cors_dev") == "true" {
+		c := cors.New(cors.Options{
+			AllowedOrigins: []string{
+				"http://localhost:3000",
+			},
+			AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT", "OPTIONS", "OPTION"},
+			AllowedHeaders:   []string{`Referer`, `user`, `Origin`, `DNT`, `User-Agent`, `X-Requested-With`, `If-Modified-Since`, `Cache-Control`, `Content-Type`, `Range`, `Authorization`, `X-Content-Length`, `X-Content-Name`, `X-Content-Extension`, `X-Chunk-Id`, `maxSize`, `maxWidth`, `maxHeight`, `fileType`},
+			AllowCredentials: true,
+		})
+
+		handler = c.Handler(router)
+	}
+	//the server
+	srv := http.Server{
+		ReadTimeout:       0,
+		WriteTimeout:      600 * time.Second,
+		IdleTimeout:       0,
+		ReadHeaderTimeout: 0,
+		Addr:              ":" + port,
+		Handler:           handler,
+	}
+	srv.ListenAndServe()
+}
+
+func setRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(middlewares.JaeggerLogger) //use of jaegger logger
+	router.Use(middlewares.RecoverWrap)
 	router.Use(middlewares.JwtAuthentication)
 
 	middlewares.Routes = utils.Routes{utils.Route{Name: "test", Method: "GET", Pattern: "/test", Authorization: uint32(utils.NoRight), HandlerFunc: func(w http.ResponseWriter, r *http.Request) {
@@ -79,29 +89,36 @@ func main() {
 	for _, route := range middlewares.Routes {
 		router.Methods(route.Method).Path(route.Pattern).Handler(route.HandlerFunc).Name(route.Name)
 	}
+	return router
+}
 
-	var handler http.Handler = router
-	if os.Getenv("cors_dev") == "true" {
-		c := cors.New(cors.Options{
-			AllowedOrigins: []string{
-				"http://localhost:3000",
-			},
-			AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT", "OPTIONS", "OPTION"},
-			AllowedHeaders:   []string{`Referer`, `user`, `Origin`, `DNT`, `User-Agent`, `X-Requested-With`, `If-Modified-Since`, `Cache-Control`, `Content-Type`, `Range`, `Authorization`, `X-Content-Length`, `X-Content-Name`, `X-Content-Extension`, `X-Chunk-Id`, `maxSize`, `maxWidth`, `maxHeight`, `fileType`},
-			AllowCredentials: true,
-		})
+func setDB() {
+	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	api.SetDB(db)
+	db.AutoMigrate(&TestObject{})
+	db.Use(gormopentracing.New())
 
-		handler = c.Handler(router)
+}
+
+func setTracing() io.Closer {
+	zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
+	cfg := config.Configuration{
+		ServiceName: "crud-go-api",
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans:            true,
+			BufferFlushInterval: 1 * time.Second,
+		},
 	}
-	srv := http.Server{
-		ReadTimeout:       0,
-		WriteTimeout:      600 * time.Second,
-		IdleTimeout:       0,
-		ReadHeaderTimeout: 0,
-		Addr:              ":" + port,
-		Handler:           handler,
-	}
-	srv.ListenAndServe()
+	tracer, closer, _ := cfg.NewTracer(
+		config.Logger(jaeger.StdLogger), config.ZipkinSharedRPCSpan(true),
+		config.Injector(opentracing.HTTPHeaders, zipkinPropagator),
+		config.Extractor(opentracing.HTTPHeaders, zipkinPropagator))
+	opentracing.SetGlobalTracer(tracer)
+	return closer
 }
 
 //for example :
