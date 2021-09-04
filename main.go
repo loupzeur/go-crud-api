@@ -55,9 +55,9 @@ func main() {
 	}
 
 	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
-	db.Use(gormopentracing.New())
 	api.SetDB(db)
 	db.AutoMigrate(&TestObject{})
+	db.Use(gormopentracing.New())
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(middlewares.JaeggerLogger) //use of jaegger logger
